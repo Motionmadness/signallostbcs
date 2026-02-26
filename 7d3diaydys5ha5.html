@@ -159,7 +159,7 @@
     </div>
     <div class="clue-card">
       <span class="clue-label">// TRANSMISSION</span>
-      <p class="clue-text placeholder-text">[ Your clue text goes here. ]</p>
+      <p class="clue-text">[ Your clue text goes here. ]</p>
     </div>
     <div class="answer-section">
       <span class="answer-label">// DECODE & ENTER ANSWER</span>
@@ -238,6 +238,19 @@
       setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 2200);
     }
   }
+
+  // Type "clearall" anywhere on the page to reset solved state
+  let clearBuffer = '';
+  document.addEventListener('keydown', e => {
+    if (e.key.length > 1) return;
+    clearBuffer += e.key.toLowerCase();
+    if (clearBuffer.length > 8) clearBuffer = clearBuffer.slice(-8);
+    if (clearBuffer === 'clearall') {
+      localStorage.removeItem(STORAGE_KEY);
+      clearBuffer = '';
+      location.reload();
+    }
+  });
 
   document.getElementById('answerInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkAnswer();
