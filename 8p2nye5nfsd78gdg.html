@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGNAL LOST — Clue 02</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060608;
+    --surface: #0d0d12;
+    --border: #1e1e2e;
+    --accent: #00ff9f;
+    --accent2: #ff3c6e;
+    --muted: #3a3a50;
+    --text: #c8c8d8;
+    --glow: 0 0 20px rgba(0,255,159,0.4);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,159,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,159,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+  }
+  .progress-bar {
+    position: fixed; top:0; left:0;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: var(--glow);
+    z-index: 10000;
+  }
+  .status-bar {
+    position: fixed; bottom:0; left:0; right:0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    z-index: 1000;
+  }
+  .status-dot {
+    display: inline-block; width:6px; height:6px;
+    background: var(--accent); border-radius:50%; margin-right:8px;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .wrap {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 20px 80px;
+    position: relative; z-index: 1;
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .clue-page { max-width:680px; width:100%; position:relative; }
+  .clue-number {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 130px; font-weight:900;
+    color: transparent; -webkit-text-stroke: 1px var(--border);
+    line-height:1;
+    position:absolute; top:-24px; right:-8px;
+    user-select:none; pointer-events:none; z-index:0;
+  }
+  .solved-banner {
+    display: none;
+    background: rgba(0,255,159,0.06);
+    border: 1px solid var(--accent); border-left: 3px solid var(--accent);
+    padding: 12px 18px; margin-bottom:20px;
+    font-size:11px; letter-spacing:2px; color:var(--accent);
+    text-transform:uppercase; position:relative; z-index:1;
+  }
+  .clue-header { position:relative; z-index:1; margin-bottom:36px; }
+  .clue-tag { font-size:10px; letter-spacing:4px; color:var(--accent); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .clue-title { font-family:'Unbounded',sans-serif; font-size:clamp(26px,5vw,46px); font-weight:700; color:#fff; line-height:1.1; }
+  .clue-card {
+    background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent);
+    padding:32px; position:relative; z-index:1; margin-bottom:20px;
+  }
+  .clue-label { font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:14px; display:block; }
+  .clue-text { font-size:16px; line-height:1.85; color:var(--text); }
+  .placeholder-text { color:var(--muted); font-style:italic; }
+  .answer-section { background:var(--surface); border:1px solid var(--border); padding:26px 32px; position:relative; z-index:1; }
+  .answer-label { font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:14px; display:block; }
+  .answer-row { display:flex; gap:12px; }
+  .answer-input {
+    flex:1; background:var(--bg); border:1px solid var(--border);
+    color:var(--accent); font-family:'Share Tech Mono',monospace;
+    font-size:16px; padding:14px 16px; letter-spacing:2px; outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s; text-transform:uppercase;
+  }
+  .answer-input:focus { border-color:var(--accent); box-shadow:var(--glow); }
+  .answer-input::placeholder { color:var(--muted); }
+  .submit-btn {
+    background:var(--accent); color:var(--bg); border:none;
+    font-family:'Unbounded',sans-serif; font-weight:700; font-size:12px;
+    letter-spacing:1px; padding:14px 22px; cursor:pointer;
+    text-transform:uppercase; transition:background 0.2s; white-space:nowrap;
+  }
+  .submit-btn:hover { background:#fff; }
+  .feedback { margin-top:14px; font-size:13px; letter-spacing:1px; min-height:20px; }
+  .feedback.correct { color:var(--accent); }
+  .feedback.wrong { color:var(--accent2); animation:shake 0.3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .reward-box {
+    display:none;
+    background:linear-gradient(135deg,rgba(0,255,159,0.06),rgba(0,255,159,0.02));
+    border:1px solid var(--accent); padding:26px 32px; margin-top:18px;
+    position:relative; z-index:1; animation:fadeIn 0.5s ease;
+  }
+  .reward-label { font-size:10px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:10px; display:block; }
+  .reward-text { font-size:18px; color:#fff; letter-spacing:1px; line-height:1.7; white-space:pre-line; }
+  @media(max-width:600px) {
+    .wrap { padding:28px 16px 80px; justify-content:flex-start; }
+    .clue-number { font-size:88px; top:-14px; right:-4px; }
+    .clue-header { margin-bottom:24px; }
+    .clue-tag { font-size:9px; letter-spacing:2px; }
+    .clue-title { font-size:clamp(22px,7vw,34px); }
+    .clue-card { padding:20px 18px; margin-bottom:14px; }
+    .clue-text { font-size:14px; }
+    .answer-section { padding:20px 18px; }
+    .answer-row { flex-direction:column; gap:10px; }
+    .answer-input { font-size:15px; padding:14px; width:100%; }
+    .submit-btn { width:100%; padding:16px; font-size:13px; }
+    .reward-box { padding:18px; }
+    .reward-text { font-size:15px; }
+    .status-bar { font-size:9px; letter-spacing:1px; padding:8px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="progress-bar" id="progressBar" style="width:29%"></div>
+
+<div class="wrap">
+  <div class="clue-page">
+    <div class="clue-number">02</div>
+    <div class="solved-banner" id="solvedBanner">✓ &nbsp; This clue has been solved</div>
+    <div class="clue-header">
+      <span class="clue-tag">// CLUE 02 — HIDDEN</span>
+      <h2 class="clue-title">Between the Pages</h2>
+    </div>
+    <div class="clue-card">
+      <span class="clue-label">// TRANSMISSION</span>
+      <p class="clue-text placeholder-text">[ Your clue text goes here. ]</p>
+    </div>
+    <div class="answer-section">
+      <span class="answer-label">// DECODE & ENTER ANSWER</span>
+      <div class="answer-row">
+        <input class="answer-input" type="text" id="answerInput" placeholder="ENTER CODE...">
+        <button class="submit-btn" onclick="checkAnswer()">SUBMIT</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="reward-box" id="rewardBox">
+      <span class="reward-label">// ACCESS GRANTED — NEXT COORDINATES</span>
+      <p class="reward-text" id="rewardText"></p>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span><span class="status-dot"></span>SIGNAL LOST — CLUE 02</span>
+  <span id="statusText">AWAITING INPUT...</span>
+</div>
+
+<script>
+  // =============================================
+  // CONFIGURATION — fill these in!
+  // =============================================
+  const ANSWER = 'ANSWER2';          // <- change this to the correct answer
+  const REWARD = '[ Your reward / next location goes here ]'; // <- change this
+
+  // =============================================
+  // STORAGE KEY — unique per clue so saves don't clash
+  // =============================================
+  const STORAGE_KEY = 'arg_solved_2';
+
+  // =============================================
+  // INIT — restore state if already solved
+  // =============================================
+  const alreadySolved = localStorage.getItem(STORAGE_KEY) === 'true';
+
+  if (alreadySolved) {
+    document.getElementById('solvedBanner').style.display = 'block';
+    document.getElementById('rewardBox').style.display = 'block';
+    document.getElementById('rewardText').textContent = REWARD;
+    document.getElementById('answerInput').disabled = true;
+    document.getElementById('answerInput').style.opacity = '0.4';
+    document.querySelector('.submit-btn').disabled = true;
+    document.querySelector('.submit-btn').style.opacity = '0.4';
+    document.getElementById('statusText').textContent = 'CLUE SOLVED';
+  }
+
+  // =============================================
+  // ANSWER CHECKING
+  // =============================================
+  function checkAnswer() {
+    const input = document.getElementById('answerInput');
+    const fb = document.getElementById('feedback');
+    const val = input.value.trim().toUpperCase();
+
+    if (val === ANSWER.toUpperCase()) {
+      localStorage.setItem(STORAGE_KEY, 'true');
+
+      fb.textContent = '// ACCESS GRANTED';
+      fb.className = 'feedback correct';
+
+      document.getElementById('rewardBox').style.display = 'block';
+      document.getElementById('rewardText').textContent = REWARD;
+
+      input.disabled = true;
+      input.style.opacity = '0.4';
+      document.querySelector('.submit-btn').disabled = true;
+      document.querySelector('.submit-btn').style.opacity = '0.4';
+
+      document.getElementById('statusText').textContent = 'CLUE SOLVED';
+    } else {
+      fb.textContent = '// INCORRECT — SIGNAL CORRUPTED';
+      fb.className = 'feedback wrong';
+      setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 2200);
+    }
+  }
+
+  document.getElementById('answerInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+</script>
+</body>
+</html>
