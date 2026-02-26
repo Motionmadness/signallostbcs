@@ -269,7 +269,7 @@
 <div class="grid-bg"></div>
 
 <div class="content">
-  <div class="signal-badge">// SIGNAL LOST //</div>
+  <div class="signal-badge">// SIGNAL DETECTED //</div>
 
   <h1 class="main-title">SIGNAL<span>LOST</span></h1>
 
@@ -300,7 +300,7 @@
   const PASSWORD = 'BCS';
 
   // ← Paste your Clue 1 Google Sites page URL here
-  const CLUE_1_URL = 'https://motionmadness.github.io/signallostbcs/sd1du7et3hef67sfs';
+  const CLUE_1_URL = 'YOUR_CLUE_1_URL_HERE';
 
   // =============================================
   // PASSWORD CHECK
@@ -328,6 +328,18 @@
       setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 2200);
     }
   }
+
+  // Type "clearall" anywhere on the page to reset password screen
+  let clearBuffer = '';
+  document.addEventListener('keydown', e => {
+    if (e.key.length > 1) return;
+    clearBuffer += e.key.toLowerCase();
+    if (clearBuffer.length > 8) clearBuffer = clearBuffer.slice(-8);
+    if (clearBuffer === 'clearall') {
+      clearBuffer = '';
+      location.reload();
+    }
+  });
 
   document.getElementById('pwInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkPassword();
