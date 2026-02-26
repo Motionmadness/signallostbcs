@@ -8,12 +8,12 @@
 <style>
   :root {
     --bg: #060608;
-    --surface: #ffffff;
-    --border: #ffffff;
-    --accent: #ffffff;
-    --accent2: #ffffff;
-    --muted: #ffffff;
-    --text: #ffffff;
+    --surface: #0d0d12;
+    --border: #1e1e2e;
+    --accent: #00ff9f;
+    --accent2: #ff3c6e;
+    --muted: #3a3a50;
+    --text: #c8c8d8;
     --glow: 0 0 20px rgba(0,255,159,0.4);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -159,7 +159,7 @@
     </div>
     <div class="clue-card">
       <span class="clue-label">// TRANSMISSION</span>
-      <p class="clue-text placeholder-text">Rg gh, Oehgr? -Caesar</p>
+      <p class="clue-text">Rg gh, Oehgr? -Caesar</p>
     </div>
     <div class="answer-section">
       <span class="answer-label">// DECODE & ENTER ANSWER</span>
@@ -170,7 +170,7 @@
       <div class="feedback" id="feedback"></div>
     </div>
     <div class="reward-box" id="rewardBox">
-      <span class="reward-label">CODE CRACKED!</span>
+      <span class="reward-label">// ACCESS GRANTED — NEXT COORDINATES</span>
       <p class="reward-text" id="rewardText"></p>
     </div>
   </div>
@@ -185,8 +185,17 @@
   // =============================================
   // CONFIGURATION — fill these in!
   // =============================================
-  const ANSWER = 'Et tu, Brute?';          // <- change this to the correct answer
-  const REWARD = 'Fmwvi gsv hgllo rm gsv xlnnlmh '; // <- change this
+  const ANSWERS = [
+    'Et tu, Brute?',
+    'Et tu, Brute',
+    'Et tu Brute?',
+    'Et tu Brute',
+    'et tu brute',
+    'et tu, brute',
+    'ETTUBRUTE',
+    'ET TU BRUTE',
+  ];
+  const REWARD = 'Fmwvi gsv hgllo rm gsv xlnnlmh';
 
   // =============================================
   // STORAGE KEY — unique per clue so saves don't clash
@@ -217,7 +226,7 @@
     const fb = document.getElementById('feedback');
     const val = input.value.trim().toUpperCase();
 
-    if (val === ANSWER.toUpperCase()) {
+    if (ANSWERS.some(a => a.toUpperCase() === val.toUpperCase())) {
       localStorage.setItem(STORAGE_KEY, 'true');
 
       fb.textContent = '// ACCESS GRANTED';
@@ -238,6 +247,19 @@
       setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 2200);
     }
   }
+
+  // Type "clearall" anywhere on the page to reset solved state
+  let clearBuffer = '';
+  document.addEventListener('keydown', e => {
+    if (e.key.length > 1) return;
+    clearBuffer += e.key.toLowerCase();
+    if (clearBuffer.length > 8) clearBuffer = clearBuffer.slice(-8);
+    if (clearBuffer === 'clearall') {
+      localStorage.removeItem(STORAGE_KEY);
+      clearBuffer = '';
+      location.reload();
+    }
+  });
 
   document.getElementById('answerInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkAnswer();
