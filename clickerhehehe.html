@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO NOT CLICK</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Unbounded:wght@900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060608;
+    --accent: #00ff9f;
+    --accent2: #ff3c6e;
+    --muted: #3a3a50;
+    --text: #c8c8d8;
+    --surface: #0d0d12;
+    --border: #1e1e2e;
+    --glow: 0 0 30px rgba(0,255,159,0.5);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--text);
+    cursor: crosshair;
+    user-select: none;
+  }
+
+  /* Scanlines */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px
+    );
+    pointer-events:none;
+    z-index:9999;
+  }
+
+  /* Grid */
+  .grid-bg {
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,159,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,159,0.03) 1px, transparent 1px);
+    background-size:60px 60px;
+    z-index:0;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .container {
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:32px;
+    padding:20px;
+    width:100%;
+    max-width:600px;
+  }
+
+  /* ===== TAUNT TEXT ===== */
+  .taunt {
+    font-size:11px;
+    letter-spacing:3px;
+    color:var(--muted);
+    text-transform:uppercase;
+    text-align:center;
+    min-height:18px;
+    transition:all 0.2s;
+  }
+
+  /* ===== SCORE ===== */
+  .score-wrap {
+    text-align:center;
+  }
+
+  .score-label {
+    font-size:10px;
+    letter-spacing:4px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:8px;
+    display:block;
+  }
+
+  .score {
+    font-family:'Unbounded', sans-serif;
+    font-size:clamp(60px, 15vw, 110px);
+    font-weight:900;
+    color:#fff;
+    line-height:1;
+    transition:transform 0.05s;
+  }
+
+  .score.bump { transform:scale(1.08); color:var(--accent); }
+
+  .score-goal {
+    font-size:11px;
+    letter-spacing:3px;
+    color:var(--muted);
+    margin-top:8px;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-track {
+    width:100%;
+    height:4px;
+    background:var(--border);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .progress-fill {
+    height:100%;
+    background:var(--accent);
+    box-shadow:var(--glow);
+    width:0%;
+    transition:width 0.1s ease;
+  }
+
+  /* ===== CLICK BUTTON ===== */
+  .btn-wrap {
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .click-btn {
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    border:2px solid var(--accent);
+    background:var(--surface);
+    color:var(--accent);
+    font-family:'Unbounded', sans-serif;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:2px;
+    cursor:crosshair;
+    position:relative;
+    transition:all 0.08s;
+    box-shadow: 0 0 0 rgba(0,255,159,0);
+    outline:none;
+    text-transform:uppercase;
+  }
+
+  .click-btn::before {
+    content:'';
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1px solid rgba(0,255,159,0.15);
+    transition:all 0.15s;
+  }
+
+  .click-btn::after {
+    content:'';
+    position:absolute;
+    inset:-18px;
+    border-radius:50%;
+    border:1px solid rgba(0,255,159,0.06);
+    transition:all 0.2s;
+  }
+
+  .click-btn:active {
+    transform:scale(0.92);
+    box-shadow:0 0 40px rgba(0,255,159,0.4), inset 0 0 30px rgba(0,255,159,0.1);
+    background:rgba(0,255,159,0.07);
+  }
+
+  .click-btn.shake {
+    animation:btnshake 0.15s;
+  }
+
+  @keyframes btnshake {
+    0%,100%{transform:scale(0.92) rotate(0deg)}
+    25%{transform:scale(0.92) rotate(-2deg)}
+    75%{transform:scale(0.92) rotate(2deg)}
+  }
+
+  /* Pulse rings */
+  .ring {
+    position:absolute;
+    width:180px; height:180px;
+    border-radius:50%;
+    border:2px solid var(--accent);
+    opacity:0;
+    pointer-events:none;
+    animation:ringout 0.6s ease-out forwards;
+  }
+
+  @keyframes ringout {
+    0%   { transform:scale(1);   opacity:0.7; }
+    100% { transform:scale(2.2); opacity:0; }
+  }
+
+  /* ===== FLOATING +1 ===== */
+  .floater {
+    position:fixed;
+    font-family:'Unbounded', sans-serif;
+    font-size:22px;
+    font-weight:900;
+    color:var(--accent);
+    pointer-events:none;
+    z-index:9000;
+    animation:floatup 0.8s ease-out forwards;
+  }
+
+  @keyframes floatup {
+    0%   { opacity:1; transform:translateY(0) scale(1); }
+    100% { opacity:0; transform:translateY(-80px) scale(0.6); }
+  }
+
+
+  /* ===== STATS ROW ===== */
+  .stats {
+    display:flex;
+    gap:32px;
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  .stat span {
+    display:block;
+    color:var(--text);
+    font-size:14px;
+    margin-top:4px;
+  }
+
+  /* ===== WIN SCREEN ===== */
+  .win-screen {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(6,6,8,0.97);
+    z-index:10000;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+    text-align:center;
+    animation:fadeIn 0.6s ease;
+  }
+
+  .win-screen.show { display:flex; }
+
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .win-title {
+    font-family:'Unbounded', sans-serif;
+    font-size:clamp(28px,7vw,56px);
+    font-weight:900;
+    color:#fff;
+    margin-bottom:8px;
+    line-height:1.1;
+  }
+
+  .win-title span { color:var(--accent); }
+
+  .win-sub {
+    font-size:11px;
+    letter-spacing:3px;
+    color:var(--muted);
+    margin-bottom:48px;
+    text-transform:uppercase;
+  }
+
+  .password-reveal {
+    background:var(--surface);
+    border:1px solid var(--accent);
+    border-left:3px solid var(--accent);
+    padding:28px 36px;
+    max-width:520px;
+    width:100%;
+    margin-bottom:24px;
+  }
+
+  .pw-label {
+    font-size:10px;
+    letter-spacing:3px;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:14px;
+    display:block;
+  }
+
+  .pw-text {
+    font-size:clamp(13px,3vw,18px);
+    color:#fff;
+    letter-spacing:1px;
+    line-height:1.6;
+    word-break:break-word;
+  }
+
+  .win-note {
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-top:16px;
+  }
+
+  /* ===== MOBILE ===== */
+  @media(max-width:500px) {
+    .click-btn { width:150px; height:150px; font-size:11px; }
+    .ring { width:150px; height:150px; }
+    .stats { gap:20px; }
+    .password-reveal { padding:20px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="container">
+  <div class="taunt" id="taunt">// why are you doing this to yourself //</div>
+
+  <div class="score-wrap">
+    <span class="score-label">// CLICKS REGISTERED</span>
+    <div class="score" id="score">0</div>
+    <div class="score-goal">TARGET: 1000</div>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="btn-wrap" id="btnWrap">
+    <button class="click-btn" id="clickBtn" onclick="handleClick(event)">
+      CLICK
+    </button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">clicks/sec<span id="cps">0.0</span></div>
+    <div class="stat">remaining<span id="remaining">1000</span></div>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div class="win-screen" id="winScreen">
+  <div class="win-title">YOU <span>DID IT.</span></div>
+  <div class="win-sub">200 clicks. congratulations on your achievement.</div>
+  <div class="password-reveal">
+    <span class="pw-label">// PASSWORD UNLOCKED</span>
+    <p class="pw-text">Just wasted precious moments of my life</p>
+  </div>
+  <div class="win-note">enter this password on the next clue page</div>
+</div>
+
+<script>
+  let count = 0;
+  let startTime = null;
+  let clickTimes = [];
+  let won = false;
+
+  const taunts = [
+    "// why are you doing this to yourself //",
+    "// keep going. it means nothing. //",
+    "// every click is a choice. a bad one. //",
+    "// you could have been doing literally anything else //",
+    "// still here? interesting. //",
+    "// your thumbs deserve better //",
+    "// at what point did you commit to this? //",
+    "// the button doesn't even respect you //",
+    "// you're so close. or are you. //",
+    "// what are you hoping to find? //",
+    "// we're past the point of no return //",
+    "// you're going to make it. unfortunately. //",
+    "// this is fine. everything is fine. //",
+    "// beep boop click click //",
+    "// the signal is watching //",
+    "// almost. almost. almost. //",
+    "// no one can save you now //",
+  ];
+
+
+  function handleClick(e) {
+    if (won) return;
+
+    if (!startTime) {
+      startTime = Date.now();
+    }
+
+    count++;
+    const scoreEl = document.getElementById('score');
+    const btn = document.getElementById('clickBtn');
+
+    // Update score
+    scoreEl.textContent = count;
+    scoreEl.classList.remove('bump');
+    void scoreEl.offsetWidth;
+    scoreEl.classList.add('bump');
+    setTimeout(() => scoreEl.classList.remove('bump'), 100);
+
+    // Progress bar
+    document.getElementById('progressFill').style.width = Math.min((count/1000)*100, 100) + '%';
+    document.getElementById('remaining').textContent = Math.max(1000 - count, 0);
+
+    // Pulse ring
+    const ring = document.createElement('div');
+    ring.className = 'ring';
+    document.getElementById('btnWrap').appendChild(ring);
+    setTimeout(() => ring.remove(), 600);
+
+    // Floating +1
+    const floater = document.createElement('div');
+    floater.className = 'floater';
+    floater.textContent = '+1';
+    floater.style.left = (e.clientX - 15) + 'px';
+    floater.style.top  = (e.clientY - 15) + 'px';
+    document.body.appendChild(floater);
+    setTimeout(() => floater.remove(), 800);
+
+    // Btn shake
+    btn.classList.remove('shake');
+    void btn.offsetWidth;
+    btn.classList.add('shake');
+
+    // CPS
+    const now = Date.now();
+    clickTimes.push(now);
+    clickTimes = clickTimes.filter(t => now - t < 1000);
+    document.getElementById('cps').textContent = clickTimes.length.toFixed(1);
+
+    // Taunt update
+    if (count % 12 === 0) {
+      const t = taunts[Math.floor(Math.random() * taunts.length)];
+      document.getElementById('taunt').textContent = t;
+    }
+
+    // Win
+    if (count >= 1000) {
+      triggerWin();
+    }
+  }
+
+  function triggerWin() {
+    won = true;
+    setTimeout(() => {
+      document.getElementById('winScreen').classList.add('show');
+    }, 400);
+  }
+
+  // Touch support — prevent double-fire on mobile
+  document.getElementById('clickBtn').addEventListener('touchend', e => {
+    e.preventDefault();
+    handleClick(e.changedTouches[0]);
+  });
+</script>
+</body>
+</html>
